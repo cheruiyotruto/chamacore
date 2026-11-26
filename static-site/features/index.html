@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full scroll-smooth">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Explore member onboarding, savings, merry-go-round, loans, bills, payments, reminders, branches, reports and platform oversight in Chama Core.">
+    <meta property="og:title" content="Features built around how groups actually work">
+    <meta property="og:description" content="Explore member onboarding, savings, merry-go-round, loans, bills, payments, reminders, branches, reports and platform oversight in Chama Core.">
+    <meta name="theme-color" content="#18181b">
+    <title>Features built around how groups actually work · Chama Core</title>
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: {
+                            800: '#3f3f46',
+                            900: '#27272a',
+                            950: '#18181b',
+                        },
+                        ocean: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            200: '#e4e4e7',
+                            300: '#d4d4d8',
+                            400: '#a1a1aa',
+                            500: '#71717a',
+                            600: '#3f3f46',
+                            700: '#27272a',
+                            800: '#1f1f23',
+                            900: '#09090b',
+                        },
+                        jade: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            200: '#e4e4e7',
+                            300: '#d4d4d8',
+                            400: '#d4d4d8',
+                            500: '#a1a1aa',
+                            600: '#71717a',
+                            700: '#52525b',
+                            800: '#3f3f46',
+                            900: '#27272a',
+                        },
+                        sun: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            400: '#d4d4d8',
+                            500: '#a1a1aa',
+                        },
+                        coral: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            500: '#a1a1aa',
+                            600: '#71717a',
+                            800: '#52525b',
+                            900: '#3f3f46',
+                        },
+                        brand: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            200: '#e4e4e7',
+                            500: '#71717a',
+                            600: '#3f3f46',
+                            700: '#27272a',
+                        },
+                    },
+                    fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+                    boxShadow: {
+                        lift: '0 24px 60px -24px rgba(24, 24, 27, 0.35)',
+                        card: '0 12px 35px -18px rgba(24, 24, 27, 0.25)',
+                    },
+                },
+            },
+        };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+    <style>
+        body { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+        [x-cloak] { display: none !important; }
+        .grid-noise {
+            background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+            background-size: 44px 44px;
+        }
+    </style>
+    </head>
+<body class="min-h-full bg-white text-ink-900 antialiased">
+    <div x-data="{ mobileOpen: false }" class="relative">
+        <header class="sticky top-0 z-50 border-b border-white/10 bg-ink-900/90 backdrop-blur-lg">
+            <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+                <a href="https://cheruiyotruto.github.io/chamacore" class="flex items-center gap-2.5 text-white" @click="mobileOpen = false">
+                    <span class="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-ocean-400 to-jade-400 text-sm font-extrabold text-ink-950 shadow-lg shadow-ocean-900/30">
+                        C
+                        <span class="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-sun-400 ring-2 ring-ink-900"></span>
+                    </span>
+                    <span class="text-lg font-bold tracking-tight">Chama Core</span>
+                </a>
+
+                <nav class="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
+                                            <a href="https://cheruiyotruto.github.io/chamacore"
+                           class="rounded-lg px-3 py-2 text-sm font-medium transition text-slate-300 hover:bg-white/5 hover:text-white">
+                            Home
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/features"
+                           class="rounded-lg px-3 py-2 text-sm font-medium transition bg-white/10 text-white">
+                            Features
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/join"
+                           class="rounded-lg px-3 py-2 text-sm font-medium transition text-slate-300 hover:bg-white/5 hover:text-white">
+                            Join a group
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/pricing"
+                           class="rounded-lg px-3 py-2 text-sm font-medium transition text-slate-300 hover:bg-white/5 hover:text-white">
+                            Pricing
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/about"
+                           class="rounded-lg px-3 py-2 text-sm font-medium transition text-slate-300 hover:bg-white/5 hover:text-white">
+                            About
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/contact"
+                           class="rounded-lg px-3 py-2 text-sm font-medium transition text-slate-300 hover:bg-white/5 hover:text-white">
+                            Contact
+                        </a>
+                                    </nav>
+
+                <div class="hidden items-center gap-2 lg:flex">
+                    <a href="https://cheruiyotruto.github.io/chamacore/login" class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-200 hover:text-white">Sign in</a>
+                    <a href="https://cheruiyotruto.github.io/chamacore/contact" class="inline-flex items-center gap-2 rounded-lg bg-jade-500 px-4 py-2 text-sm font-bold text-ink-950 shadow-sm transition hover:bg-jade-400 focus:outline-none focus:ring-2 focus:ring-jade-300 focus:ring-offset-2 focus:ring-offset-ink-900">
+                        Request access
+                        <svg class="h-5 w-5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+</svg>
+                    </a>
+                </div>
+
+                <button type="button"
+                        class="rounded-lg p-2 text-slate-200 hover:bg-white/10 lg:hidden"
+                        x-bind:aria-expanded="mobileOpen ? 'true' : 'false'"
+                        aria-controls="marketing-mobile-nav"
+                        aria-label="Toggle navigation"
+                        @click="mobileOpen = !mobileOpen">
+                    <svg class="h-5 w-5 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" x-cloak="x-cloak" x-show="!mobileOpen" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+</svg>
+                    <svg class="h-5 w-5 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" x-cloak="x-cloak" x-show="mobileOpen" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+</svg>
+                </button>
+            </div>
+
+            <div id="marketing-mobile-nav" x-cloak x-show="mobileOpen" x-transition class="border-t border-white/10 bg-ink-950/95 lg:hidden">
+                <nav class="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-3 sm:px-6" aria-label="Mobile navigation">
+                                            <a href="https://cheruiyotruto.github.io/chamacore"
+                           class="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                           @click="mobileOpen = false">
+                            Home
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/features"
+                           class="rounded-lg px-3 py-2.5 text-sm font-medium bg-white/10 text-white"
+                           @click="mobileOpen = false">
+                            Features
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/join"
+                           class="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                           @click="mobileOpen = false">
+                            Join a group
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/pricing"
+                           class="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                           @click="mobileOpen = false">
+                            Pricing
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/about"
+                           class="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                           @click="mobileOpen = false">
+                            About
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/contact"
+                           class="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                           @click="mobileOpen = false">
+                            Contact
+                        </a>
+                                        <div class="mt-2 grid grid-cols-2 gap-2 border-t border-white/10 pt-3">
+                        <a href="https://cheruiyotruto.github.io/chamacore/login" class="rounded-lg border border-white/20 px-3 py-2 text-center text-sm font-semibold text-white">Sign in</a>
+                        <a href="https://cheruiyotruto.github.io/chamacore/contact" class="rounded-lg bg-jade-500 px-3 py-2 text-center text-sm font-bold text-ink-950">Request access</a>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <main>
+            
+            
+                <section class="relative grid-noise overflow-hidden bg-gradient-to-br from-ink-900 via-ink-800 to-ocean-700 pb-20 pt-16 sm:pt-20">
+        <div class="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-jade-300">Platform capabilities</p>
+            <h1 class="mx-auto mt-5 max-w-4xl text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl">
+                Everything your group needs to move from scattered records to one trusted system.
+            </h1>
+            <p class="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-300">
+                Each module shares the same ledger, permissions and member identity. That means fewer manual handoffs, cleaner reports and a clearer experience for every member.
+            </p>
+
+            <div class="mt-9 flex flex-wrap justify-center gap-2">
+                                    <a href="#members" class="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-jade-300/40 hover:text-white">Members</a>
+                                    <a href="#savings" class="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-jade-300/40 hover:text-white">Savings &amp; MGR</a>
+                                    <a href="#loans" class="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-jade-300/40 hover:text-white">Loans</a>
+                                    <a href="#payments" class="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-jade-300/40 hover:text-white">Payments</a>
+                                    <a href="#reminders" class="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-jade-300/40 hover:text-white">Reminders</a>
+                                    <a href="#reports" class="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-jade-300/40 hover:text-white">Reports</a>
+                            </div>
+        </div>
+    </section>
+
+    <section class="bg-white py-20 sm:py-24">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="space-y-20">
+                                    <div id="members" class="scroll-mt-24 grid items-center gap-10 lg:grid-cols-2 lg:gap-16 ">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-[0.2em] text-ocean-700">Members &amp; governance</p>
+                            <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-ink-900">Onboard members once. Give everyone the right view.</h2>
+                            <p class="mt-4 text-base leading-7 text-slate-600">Invite members with a secure link, collect applications and documents, then assign roles that match your constitution. Members see their own records; officials see the tools they are authorised to use.</p>
+
+                            <div class="mt-7 space-y-4">
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Invitation links</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">No public self-registration; each member is invited by an authorised official.</p>
+                                        </div>
+                                    </div>
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Identity requirements</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Require photo, video or documents based on group policy.</p>
+                                        </div>
+                                    </div>
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Roles &amp; permissions</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Fine-grained access for staff, tellers, treasurers and members.</p>
+                                        </div>
+                                    </div>
+                                                            </div>
+                        </div>
+
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-card sm:p-6">
+                            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                                <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-ocean-100 text-ocean-700">
+                                            <svg class="h-5 w-5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+</svg>
+                                        </span>
+                                        <p class="text-sm font-bold text-ink-900">Member application</p>
+                                    </div>
+                                    <span class="rounded-full bg-jade-50 px-2 py-1 text-[10px] font-bold text-jade-700">LIVE VIEW</span>
+                                </div>
+                                <div class="divide-y divide-slate-100">
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">Amina Mwangi</span>
+                                            <span class="hidden text-slate-500 sm:block">Application submitted</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Review</span>
+                                        </div>
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">Brian Otieno</span>
+                                            <span class="hidden text-slate-500 sm:block">Documents verified</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Approve</span>
+                                        </div>
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">Catherine Wanjiru</span>
+                                            <span class="hidden text-slate-500 sm:block">Awaiting next of kin</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Remind</span>
+                                        </div>
+                                                                    </div>
+                            </div>
+                            <div class="mt-4 flex items-center gap-2 rounded-xl border border-ocean-200 bg-ocean-50 px-4 py-3 text-xs text-ocean-700">
+                                <svg class="h-5 w-5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+</svg>
+                                <p>Access is scoped by group and role. Members never see another member's records.</p>
+                            </div>
+                        </div>
+                    </div>
+                                    <div id="savings" class="scroll-mt-24 grid items-center gap-10 lg:grid-cols-2 lg:gap-16 lg:[&amp;&gt;*:first-child]:order-2">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-[0.2em] text-ocean-700">Savings &amp; merry-go-round</p>
+                            <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-ink-900">Every contribution has a home and a clear sequence.</h2>
+                            <p class="mt-4 text-base leading-7 text-slate-600">Create savings products, post deposits and withdrawals, and run merry-go-round cycles with defined order and payout dates. Members can opt in to MGR payments and pay from the portal.</p>
+
+                            <div class="mt-7 space-y-4">
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Savings products</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Configure accounts, deposits, withdrawals and statements.</p>
+                                        </div>
+                                    </div>
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">MGR cycles</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Track rotation, contributions, opt-outs and payouts.</p>
+                                        </div>
+                                    </div>
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Portal payments</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Wallet or M-Pesa STK pushes recorded against the right cycle.</p>
+                                        </div>
+                                    </div>
+                                                            </div>
+                        </div>
+
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-card sm:p-6">
+                            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                                <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5h3m-3 3h3m-6-3h.008v.008H12V10.5zm0 3h.008v.008H12V13.5z" />
+</svg>
+                                        </span>
+                                        <p class="text-sm font-bold text-ink-900">MGR rotation</p>
+                                    </div>
+                                    <span class="rounded-full bg-jade-50 px-2 py-1 text-[10px] font-bold text-jade-700">LIVE VIEW</span>
+                                </div>
+                                <div class="divide-y divide-slate-100">
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">Cycle 08</span>
+                                            <span class="hidden text-slate-500 sm:block">Amina Mwangi</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Payout due</span>
+                                        </div>
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">Contribution 24</span>
+                                            <span class="hidden text-slate-500 sm:block">Brian Otieno</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Paid</span>
+                                        </div>
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">Contribution 25</span>
+                                            <span class="hidden text-slate-500 sm:block">Catherine Wanjiru</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Due in 3 days</span>
+                                        </div>
+                                                                    </div>
+                            </div>
+                            <div class="mt-4 flex items-center gap-2 rounded-xl border border-ocean-200 bg-ocean-50 px-4 py-3 text-xs text-ocean-700">
+                                <svg class="h-5 w-5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+</svg>
+                                <p>Access is scoped by group and role. Members never see another member's records.</p>
+                            </div>
+                        </div>
+                    </div>
+                                    <div id="loans" class="scroll-mt-24 grid items-center gap-10 lg:grid-cols-2 lg:gap-16 ">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-[0.2em] text-ocean-700">Lending &amp; approvals</p>
+                            <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-ink-900">Lend with a paper trail the committee can actually read.</h2>
+                            <p class="mt-4 text-base leading-7 text-slate-600">Quote repayment schedules, record guarantors, request employer finance confirmation, approve and disburse loans, then post repayments and penalties. Outstanding balances and arrears update automatically.</p>
+
+                            <div class="mt-7 space-y-4">
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Loan products</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Set rates, periods, fees and eligibility rules.</p>
+                                        </div>
+                                    </div>
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Guarantees</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Members respond to guarantee requests in their portal.</p>
+                                        </div>
+                                    </div>
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Employer confirmation</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Signed links let finance offices confirm or decline.</p>
+                                        </div>
+                                    </div>
+                                                            </div>
+                        </div>
+
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-card sm:p-6">
+                            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                                <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-ocean-100 text-ocean-700">
+                                            <svg class="h-5 w-5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+</svg>
+                                        </span>
+                                        <p class="text-sm font-bold text-ink-900">Loan approval queue</p>
+                                    </div>
+                                    <span class="rounded-full bg-jade-50 px-2 py-1 text-[10px] font-bold text-jade-700">LIVE VIEW</span>
+                                </div>
+                                <div class="divide-y divide-slate-100">
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">LN-0042</span>
+                                            <span class="hidden text-slate-500 sm:block">Daniel Kiprop</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Awaiting committee</span>
+                                        </div>
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">LN-0041</span>
+                                            <span class="hidden text-slate-500 sm:block">Esther Njeri</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Guaranteed</span>
+                                        </div>
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">LN-0040</span>
+                                            <span class="hidden text-slate-500 sm:block">Francis Omondi</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Disbursed</span>
+                                        </div>
+                                                                    </div>
+                            </div>
+                            <div class="mt-4 flex items-center gap-2 rounded-xl border border-ocean-200 bg-ocean-50 px-4 py-3 text-xs text-ocean-700">
+                                <svg class="h-5 w-5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+</svg>
+                                <p>Access is scoped by group and role. Members never see another member's records.</p>
+                            </div>
+                        </div>
+                    </div>
+                                    <div id="payments" class="scroll-mt-24 grid items-center gap-10 lg:grid-cols-2 lg:gap-16 lg:[&amp;&gt;*:first-child]:order-2">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-[0.2em] text-ocean-700">Bills, payments &amp; payouts</p>
+                            <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-ink-900">Collect money and pay out with fewer reconciliation headaches.</h2>
+                            <p class="mt-4 text-base leading-7 text-slate-600">Issue bills, accept wallet and M-Pesa payments, configure platform and group charges, and send money through bank, PayBill, B2B or B2C rails. Each movement is posted to the ledger with an audit reference.</p>
+
+                            <div class="mt-7 space-y-4">
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Configurable charges</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Percent, fixed, combined or manual rules by payment type.</p>
+                                        </div>
+                                    </div>
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Member wallets</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Top up, transfer and pay bills or MGR contributions.</p>
+                                        </div>
+                                    </div>
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Payout rails</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Bank transfers and M-Pesa disbursements with approval controls.</p>
+                                        </div>
+                                    </div>
+                                                            </div>
+                        </div>
+
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-card sm:p-6">
+                            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                                <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 3h6m-6-15h6a2.25 2.25 0 012.25 2.25v15.75l-3-1.5-3 1.5-3-1.5-3 1.5V4.5A2.25 2.25 0 019 3z" />
+</svg>
+                                        </span>
+                                        <p class="text-sm font-bold text-ink-900">Payment activity</p>
+                                    </div>
+                                    <span class="rounded-full bg-jade-50 px-2 py-1 text-[10px] font-bold text-jade-700">LIVE VIEW</span>
+                                </div>
+                                <div class="divide-y divide-slate-100">
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">Bill #118</span>
+                                            <span class="hidden text-slate-500 sm:block">M-Pesa STK</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Confirmed</span>
+                                        </div>
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">MGR contribution</span>
+                                            <span class="hidden text-slate-500 sm:block">Wallet</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Confirmed</span>
+                                        </div>
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">B2C payout</span>
+                                            <span class="hidden text-slate-500 sm:block">M-Pesa</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Processing</span>
+                                        </div>
+                                                                    </div>
+                            </div>
+                            <div class="mt-4 flex items-center gap-2 rounded-xl border border-ocean-200 bg-ocean-50 px-4 py-3 text-xs text-ocean-700">
+                                <svg class="h-5 w-5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+</svg>
+                                <p>Access is scoped by group and role. Members never see another member's records.</p>
+                            </div>
+                        </div>
+                    </div>
+                                    <div id="reminders" class="scroll-mt-24 grid items-center gap-10 lg:grid-cols-2 lg:gap-16 ">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-[0.2em] text-ocean-700">Reminders &amp; documents</p>
+                            <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-ink-900">Nudge members before dates become problems.</h2>
+                            <p class="mt-4 text-base leading-7 text-slate-600">Create reminder rules for contributions, payouts, loans, bills, investment maturity and custom dates. Choose automatic recipients or a selected audience, and set offsets before or after the event.</p>
+
+                            <div class="mt-7 space-y-4">
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Flexible timing</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Offsets such as -3, 0 or +2 days around a due date.</p>
+                                        </div>
+                                    </div>
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Right audience</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Automatic, all members or a selected group.</p>
+                                        </div>
+                                    </div>
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Scheduled runs</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Send manually or through the reminder command.</p>
+                                        </div>
+                                    </div>
+                                                            </div>
+                        </div>
+
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-card sm:p-6">
+                            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                                <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-sun-100 text-sun-700">
+                                            <svg class="h-5 w-5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+</svg>
+                                        </span>
+                                        <p class="text-sm font-bold text-ink-900">Reminder rules</p>
+                                    </div>
+                                    <span class="rounded-full bg-jade-50 px-2 py-1 text-[10px] font-bold text-jade-700">LIVE VIEW</span>
+                                </div>
+                                <div class="divide-y divide-slate-100">
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">MGR contribution</span>
+                                            <span class="hidden text-slate-500 sm:block">3 days before</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Active</span>
+                                        </div>
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">Bill due date</span>
+                                            <span class="hidden text-slate-500 sm:block">On due date</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Active</span>
+                                        </div>
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">Loan repayment</span>
+                                            <span class="hidden text-slate-500 sm:block">2 days before</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Active</span>
+                                        </div>
+                                                                    </div>
+                            </div>
+                            <div class="mt-4 flex items-center gap-2 rounded-xl border border-ocean-200 bg-ocean-50 px-4 py-3 text-xs text-ocean-700">
+                                <svg class="h-5 w-5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+</svg>
+                                <p>Access is scoped by group and role. Members never see another member's records.</p>
+                            </div>
+                        </div>
+                    </div>
+                                    <div id="reports" class="scroll-mt-24 grid items-center gap-10 lg:grid-cols-2 lg:gap-16 lg:[&amp;&gt;*:first-child]:order-2">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-[0.2em] text-ocean-700">Reporting &amp; oversight</p>
+                            <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-ink-900">Walk into every meeting with the numbers already ready.</h2>
+                            <p class="mt-4 text-base leading-7 text-slate-600">Use the dashboard, trial balance, income statement, balance sheet, member statements and exportable reports. Branches inherit the nearest configured settings while head office keeps a clear oversight view.</p>
+
+                            <div class="mt-7 space-y-4">
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Double-entry ledger</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Every posted transaction has a debit and a credit.</p>
+                                        </div>
+                                    </div>
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Branches</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Head office, branch codes and inherited policies.</p>
+                                        </div>
+                                    </div>
+                                                                    <div class="flex gap-3">
+                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-jade-100 text-jade-700">
+                                            <svg class="h-5 w-5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-bold text-ink-900">Platform modes</p>
+                                            <p class="mt-0.5 text-sm text-slate-600">Self-managed, oversight or full control where authorised.</p>
+                                        </div>
+                                    </div>
+                                                            </div>
+                        </div>
+
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-card sm:p-6">
+                            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                                <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-ocean-100 text-ocean-700">
+                                            <svg class="h-5 w-5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+</svg>
+                                        </span>
+                                        <p class="text-sm font-bold text-ink-900">Report library</p>
+                                    </div>
+                                    <span class="rounded-full bg-jade-50 px-2 py-1 text-[10px] font-bold text-jade-700">LIVE VIEW</span>
+                                </div>
+                                <div class="divide-y divide-slate-100">
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">Trial balance</span>
+                                            <span class="hidden text-slate-500 sm:block">Posted ledger</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Export</span>
+                                        </div>
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">Member statement</span>
+                                            <span class="hidden text-slate-500 sm:block">Per member</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Export</span>
+                                        </div>
+                                                                            <div class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+                                            <span class="font-semibold text-ink-900">Platform income</span>
+                                            <span class="hidden text-slate-500 sm:block">Report only</span>
+                                            <span class="rounded-full bg-ocean-50 px-2 py-1 text-[11px] font-semibold text-ocean-700">Review</span>
+                                        </div>
+                                                                    </div>
+                            </div>
+                            <div class="mt-4 flex items-center gap-2 rounded-xl border border-ocean-200 bg-ocean-50 px-4 py-3 text-xs text-ocean-700">
+                                <svg class="h-5 w-5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+</svg>
+                                <p>Access is scoped by group and role. Members never see another member's records.</p>
+                            </div>
+                        </div>
+                    </div>
+                            </div>
+        </div>
+    </section>
+
+    <section class="bg-slate-50 py-20 sm:py-24">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="grid items-start gap-10 lg:grid-cols-[0.8fr_1.2fr]">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-[0.2em] text-coral-600">Why it matters</p>
+                    <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-ink-900">Spreadsheets show numbers. Chama Core shows what happened and why.</h2>
+                    <p class="mt-4 text-base leading-7 text-slate-600">When a member asks a question, your team can trace the answer from the portal payment back to the ledger entry, approval and receipt.</p>
+                </div>
+
+                <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
+                    <div class="grid grid-cols-2 border-b border-slate-200 bg-slate-50 text-xs font-bold uppercase tracking-wide">
+                        <div class="px-5 py-3 text-slate-500">Manual process</div>
+                        <div class="border-l border-slate-200 bg-jade-50 px-5 py-3 text-jade-700">With Chama Core</div>
+                    </div>
+                                            <div class="grid grid-cols-2 border-b border-slate-100 text-sm last:border-0">
+                            <div class="flex items-start gap-2 px-5 py-4 text-slate-600">
+                                <svg class="h-5 w-5 mt-0.5 h-4 w-4 shrink-0 text-coral-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+</svg>
+                                Balances typed by hand
+                            </div>
+                            <div class="flex items-start gap-2 border-l border-slate-200 bg-jade-50/40 px-5 py-4 font-medium text-ink-900">
+                                <svg class="h-5 w-5 mt-0.5 h-4 w-4 shrink-0 text-jade-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                Balances posted from each transaction
+                            </div>
+                        </div>
+                                            <div class="grid grid-cols-2 border-b border-slate-100 text-sm last:border-0">
+                            <div class="flex items-start gap-2 px-5 py-4 text-slate-600">
+                                <svg class="h-5 w-5 mt-0.5 h-4 w-4 shrink-0 text-coral-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+</svg>
+                                Payment messages checked separately
+                            </div>
+                            <div class="flex items-start gap-2 border-l border-slate-200 bg-jade-50/40 px-5 py-4 font-medium text-ink-900">
+                                <svg class="h-5 w-5 mt-0.5 h-4 w-4 shrink-0 text-jade-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                Payments reconciled against bills and members
+                            </div>
+                        </div>
+                                            <div class="grid grid-cols-2 border-b border-slate-100 text-sm last:border-0">
+                            <div class="flex items-start gap-2 px-5 py-4 text-slate-600">
+                                <svg class="h-5 w-5 mt-0.5 h-4 w-4 shrink-0 text-coral-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+</svg>
+                                Approvals lost in chat
+                            </div>
+                            <div class="flex items-start gap-2 border-l border-slate-200 bg-jade-50/40 px-5 py-4 font-medium text-ink-900">
+                                <svg class="h-5 w-5 mt-0.5 h-4 w-4 shrink-0 text-jade-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                Permissions and audit trail built in
+                            </div>
+                        </div>
+                                            <div class="grid grid-cols-2 border-b border-slate-100 text-sm last:border-0">
+                            <div class="flex items-start gap-2 px-5 py-4 text-slate-600">
+                                <svg class="h-5 w-5 mt-0.5 h-4 w-4 shrink-0 text-coral-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+</svg>
+                                Reports rebuilt every meeting
+                            </div>
+                            <div class="flex items-start gap-2 border-l border-slate-200 bg-jade-50/40 px-5 py-4 font-medium text-ink-900">
+                                <svg class="h-5 w-5 mt-0.5 h-4 w-4 shrink-0 text-jade-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                Reports available whenever you need them
+                            </div>
+                        </div>
+                                            <div class="grid grid-cols-2 border-b border-slate-100 text-sm last:border-0">
+                            <div class="flex items-start gap-2 px-5 py-4 text-slate-600">
+                                <svg class="h-5 w-5 mt-0.5 h-4 w-4 shrink-0 text-coral-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+</svg>
+                                Branches keep separate files
+                            </div>
+                            <div class="flex items-start gap-2 border-l border-slate-200 bg-jade-50/40 px-5 py-4 font-medium text-ink-900">
+                                <svg class="h-5 w-5 mt-0.5 h-4 w-4 shrink-0 text-jade-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+</svg>
+                                Branches inherit settings and report cleanly
+                            </div>
+                        </div>
+                                    </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-gradient-to-br from-ocean-700 via-ink-800 to-jade-700 py-16 sm:py-20">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 px-6 py-10 shadow-lift sm:px-12 sm:py-14">
+            <div class="relative flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
+                <div class="max-w-2xl">
+                    <p class="text-xs font-bold uppercase tracking-[0.2em] text-jade-300">Ready when your group is</p>
+                    <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                        Give your group one clear place for money, members and decisions.
+                    </h2>
+                    <p class="mt-4 text-base leading-7 text-slate-200">
+                        Share a few details about your organisation. We will help you map your current process, choose a plan and set up a workspace your members can trust.
+                    </p>
+                </div>
+
+                <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+                    <a href="https://cheruiyotruto.github.io/chamacore/contact" class="inline-flex items-center justify-center gap-2 rounded-xl bg-jade-500 px-6 py-3.5 text-sm font-bold text-ink-950 shadow-lg shadow-jade-900/20 transition hover:bg-jade-400 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-ink-900">
+                        Request access
+                        <svg class="h-5 w-5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+</svg>
+                    </a>
+                    <a href="https://cheruiyotruto.github.io/chamacore/pricing" class="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/10">
+                        Compare plans
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+        </main>
+
+        <footer class="mt-24 bg-ink-950 text-slate-300">
+            <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+                <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                        <div class="flex items-center gap-2.5 text-white">
+                            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-ocean-400 to-jade-400 text-sm font-extrabold text-ink-950">C</span>
+                            <span class="text-lg font-bold">Chama Core</span>
+                        </div>
+                        <p class="mt-4 max-w-sm text-sm leading-6 text-slate-400">
+                            One dependable workspace for group savings, lending, payments, records and decisions.
+                        </p>
+                        <div class="mt-5 flex flex-wrap gap-2 text-xs font-medium text-slate-400">
+                            <span class="rounded-full bg-white/5 px-3 py-1 ring-1 ring-white/10">Tenant isolated</span>
+                            <span class="rounded-full bg-white/5 px-3 py-1 ring-1 ring-white/10">Double-entry ledger</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-sm font-bold text-white">Product</p>
+                        <ul class="mt-4 space-y-2.5 text-sm">
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/features" class="hover:text-white">Features</a></li>
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/pricing" class="hover:text-white">Plans &amp; pricing</a></li>
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/features#payments" class="hover:text-white">Payments</a></li>
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/features#reports" class="hover:text-white">Reports</a></li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <p class="text-sm font-bold text-white">Company</p>
+                        <ul class="mt-4 space-y-2.5 text-sm">
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/about" class="hover:text-white">About Chama Core</a></li>
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/about#principles" class="hover:text-white">How we work</a></li>
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/contact" class="hover:text-white">Contact</a></li>
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/login" class="hover:text-white">Existing member sign in</a></li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <p class="text-sm font-bold text-white">Get started</p>
+                        <p class="mt-4 text-sm leading-6 text-slate-400">Tell us about your group and we will help you choose the right setup.</p>
+                        <a href="https://cheruiyotruto.github.io/chamacore/contact" class="mt-4 inline-flex items-center gap-2 rounded-lg bg-jade-500 px-4 py-2 text-sm font-bold text-ink-950 hover:bg-jade-400">
+                            Request access
+                            <svg class="h-5 w-5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+</svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+                    <p>&copy; 2026 Chama Core. Built for responsible group finance.</p>
+                    <p>Savings · Loans · Payments · Governance · Reports</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    </body>
+</html>

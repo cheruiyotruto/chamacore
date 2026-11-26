@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full scroll-smooth">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Tell Chama Core about your chama, SACCO, welfare group or organisation and get help choosing the right setup.">
+    <meta property="og:title" content="Request access">
+    <meta property="og:description" content="Tell Chama Core about your chama, SACCO, welfare group or organisation and get help choosing the right setup.">
+    <meta name="theme-color" content="#18181b">
+    <title>Request access · Chama Core</title>
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: {
+                            800: '#3f3f46',
+                            900: '#27272a',
+                            950: '#18181b',
+                        },
+                        ocean: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            200: '#e4e4e7',
+                            300: '#d4d4d8',
+                            400: '#a1a1aa',
+                            500: '#71717a',
+                            600: '#3f3f46',
+                            700: '#27272a',
+                            800: '#1f1f23',
+                            900: '#09090b',
+                        },
+                        jade: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            200: '#e4e4e7',
+                            300: '#d4d4d8',
+                            400: '#d4d4d8',
+                            500: '#a1a1aa',
+                            600: '#71717a',
+                            700: '#52525b',
+                            800: '#3f3f46',
+                            900: '#27272a',
+                        },
+                        sun: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            400: '#d4d4d8',
+                            500: '#a1a1aa',
+                        },
+                        coral: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            500: '#a1a1aa',
+                            600: '#71717a',
+                            800: '#52525b',
+                            900: '#3f3f46',
+                        },
+                        brand: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            200: '#e4e4e7',
+                            500: '#71717a',
+                            600: '#3f3f46',
+                            700: '#27272a',
+                        },
+                    },
+                    fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+                    boxShadow: {
+                        lift: '0 24px 60px -24px rgba(24, 24, 27, 0.35)',
+                        card: '0 12px 35px -18px rgba(24, 24, 27, 0.25)',
+                    },
+                },
+            },
+        };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+    <style>
+        body { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+        [x-cloak] { display: none !important; }
+        .grid-noise {
+            background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+            background-size: 44px 44px;
+        }
+    </style>
+    </head>
+<body class="min-h-full bg-white text-ink-900 antialiased">
+    <div x-data="{ mobileOpen: false }" class="relative">
+        <header class="sticky top-0 z-50 border-b border-white/10 bg-ink-900/90 backdrop-blur-lg">
+            <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+                <a href="https://cheruiyotruto.github.io/chamacore" class="flex items-center gap-2.5 text-white" @click="mobileOpen = false">
+                    <span class="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-ocean-400 to-jade-400 text-sm font-extrabold text-ink-950 shadow-lg shadow-ocean-900/30">
+                        C
+                        <span class="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-sun-400 ring-2 ring-ink-900"></span>
+                    </span>
+                    <span class="text-lg font-bold tracking-tight">Chama Core</span>
+                </a>
+
+                <nav class="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
+                                            <a href="https://cheruiyotruto.github.io/chamacore"
+                           class="rounded-lg px-3 py-2 text-sm font-medium transition text-slate-300 hover:bg-white/5 hover:text-white">
+                            Home
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/features"
+                           class="rounded-lg px-3 py-2 text-sm font-medium transition text-slate-300 hover:bg-white/5 hover:text-white">
+                            Features
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/join"
+                           class="rounded-lg px-3 py-2 text-sm font-medium transition text-slate-300 hover:bg-white/5 hover:text-white">
+                            Join a group
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/pricing"
+                           class="rounded-lg px-3 py-2 text-sm font-medium transition text-slate-300 hover:bg-white/5 hover:text-white">
+                            Pricing
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/about"
+                           class="rounded-lg px-3 py-2 text-sm font-medium transition text-slate-300 hover:bg-white/5 hover:text-white">
+                            About
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/contact"
+                           class="rounded-lg px-3 py-2 text-sm font-medium transition bg-white/10 text-white">
+                            Contact
+                        </a>
+                                    </nav>
+
+                <div class="hidden items-center gap-2 lg:flex">
+                    <a href="https://cheruiyotruto.github.io/chamacore/login" class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-200 hover:text-white">Sign in</a>
+                    <a href="https://cheruiyotruto.github.io/chamacore/contact" class="inline-flex items-center gap-2 rounded-lg bg-jade-500 px-4 py-2 text-sm font-bold text-ink-950 shadow-sm transition hover:bg-jade-400 focus:outline-none focus:ring-2 focus:ring-jade-300 focus:ring-offset-2 focus:ring-offset-ink-900">
+                        Request access
+                        <svg class="h-5 w-5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+</svg>
+                    </a>
+                </div>
+
+                <button type="button"
+                        class="rounded-lg p-2 text-slate-200 hover:bg-white/10 lg:hidden"
+                        x-bind:aria-expanded="mobileOpen ? 'true' : 'false'"
+                        aria-controls="marketing-mobile-nav"
+                        aria-label="Toggle navigation"
+                        @click="mobileOpen = !mobileOpen">
+                    <svg class="h-5 w-5 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" x-cloak="x-cloak" x-show="!mobileOpen" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+</svg>
+                    <svg class="h-5 w-5 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" x-cloak="x-cloak" x-show="mobileOpen" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+</svg>
+                </button>
+            </div>
+
+            <div id="marketing-mobile-nav" x-cloak x-show="mobileOpen" x-transition class="border-t border-white/10 bg-ink-950/95 lg:hidden">
+                <nav class="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-3 sm:px-6" aria-label="Mobile navigation">
+                                            <a href="https://cheruiyotruto.github.io/chamacore"
+                           class="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                           @click="mobileOpen = false">
+                            Home
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/features"
+                           class="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                           @click="mobileOpen = false">
+                            Features
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/join"
+                           class="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                           @click="mobileOpen = false">
+                            Join a group
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/pricing"
+                           class="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                           @click="mobileOpen = false">
+                            Pricing
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/about"
+                           class="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                           @click="mobileOpen = false">
+                            About
+                        </a>
+                                            <a href="https://cheruiyotruto.github.io/chamacore/contact"
+                           class="rounded-lg px-3 py-2.5 text-sm font-medium bg-white/10 text-white"
+                           @click="mobileOpen = false">
+                            Contact
+                        </a>
+                                        <div class="mt-2 grid grid-cols-2 gap-2 border-t border-white/10 pt-3">
+                        <a href="https://cheruiyotruto.github.io/chamacore/login" class="rounded-lg border border-white/20 px-3 py-2 text-center text-sm font-semibold text-white">Sign in</a>
+                        <a href="https://cheruiyotruto.github.io/chamacore/contact" class="rounded-lg bg-jade-500 px-3 py-2 text-center text-sm font-bold text-ink-950">Request access</a>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <main>
+            
+            
+                
+    <section class="relative overflow-hidden bg-gradient-to-br from-ink-900 via-ink-800 to-ocean-700 pb-12 pt-16 sm:pt-20">
+        <div class="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-jade-300">Get started</p>
+            <h1 class="mt-5 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">Let's set up Chama Core around your group.</h1>
+            <p class="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-300">
+                Share a few details about how your organisation works. We will review your request, recommend a plan and help you prepare the workspace before members are invited.
+            </p>
+        </div>
+    </section>
+
+    <section class="bg-slate-50 pb-20 sm:pb-24">
+        <div class="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[1.35fr_0.65fr] lg:px-8">
+            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-card sm:p-9">
+                <div>
+                    <h2 class="text-xl font-extrabold text-ink-900">Access request</h2>
+                    <p class="mt-1 text-sm text-slate-500">Fields marked with an asterisk are required.</p>
+                </div>
+
+                <form method="POST" action="https://cheruiyotruto.github.io/chamacore/contact" class="mt-7 space-y-6">
+                    <input type="hidden" name="_token" value="Sj6a3Q3gqOHFwXrVokH93kJdhjSUlv9X4nJhxcwu" autocomplete="off">
+                    <div class="sr-only" aria-hidden="true">
+                        <label for="website">Leave this field empty</label>
+                        <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+                    </div>
+
+                    <div class="grid gap-5 sm:grid-cols-2">
+                        <div>
+                            <label for="name" class="block text-sm font-bold text-ink-900">Your name <span class="text-coral-600">*</span></label>
+                            <input id="name" name="name" type="text" value="" required autocomplete="name"
+                                   class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-ink-900 placeholder:text-slate-400 focus:border-ocean-500 focus:outline-none focus:ring-2 focus:ring-ocean-500/20 "
+                                   placeholder="e.g. Amina Mwangi">
+                                                    </div>
+
+                        <div>
+                            <label for="organisation" class="block text-sm font-bold text-ink-900">Organisation / group <span class="text-coral-600">*</span></label>
+                            <input id="organisation" name="organisation" type="text" value="" required autocomplete="organization"
+                                   class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-ink-900 placeholder:text-slate-400 focus:border-ocean-500 focus:outline-none focus:ring-2 focus:ring-ocean-500/20 "
+                                   placeholder="e.g. Umoja Women's Group">
+                                                    </div>
+                    </div>
+
+                    <div class="grid gap-5 sm:grid-cols-2">
+                        <div>
+                            <label for="email" class="block text-sm font-bold text-ink-900">Email address <span class="text-coral-600">*</span></label>
+                            <input id="email" name="email" type="email" value="" required autocomplete="email"
+                                   class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-ink-900 placeholder:text-slate-400 focus:border-ocean-500 focus:outline-none focus:ring-2 focus:ring-ocean-500/20 "
+                                   placeholder="you@example.com">
+                                                    </div>
+
+                        <div>
+                            <label for="phone" class="block text-sm font-bold text-ink-900">Phone number</label>
+                            <input id="phone" name="phone" type="tel" value="" autocomplete="tel"
+                                   class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-ink-900 placeholder:text-slate-400 focus:border-ocean-500 focus:outline-none focus:ring-2 focus:ring-ocean-500/20 "
+                                   placeholder="e.g. 0712 345 678">
+                                                    </div>
+                    </div>
+
+                    <div class="grid gap-5 sm:grid-cols-2">
+                        <div>
+                            <label for="group_type" class="block text-sm font-bold text-ink-900">Type of organisation</label>
+                            <select id="group_type" name="group_type"
+                                    class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-ink-900 focus:border-ocean-500 focus:outline-none focus:ring-2 focus:ring-ocean-500/20 ">
+                                <option value="">Select one</option>
+                                                                    <option value="Chama / investment club" >Chama / investment club</option>
+                                                                    <option value="SACCO / cooperative" >SACCO / cooperative</option>
+                                                                    <option value="Welfare or community group" >Welfare or community group</option>
+                                                                    <option value="Employer / staff group" >Employer / staff group</option>
+                                                                    <option value="Umbrella organisation or network" >Umbrella organisation or network</option>
+                                                                    <option value="Other" >Other</option>
+                                                            </select>
+                                                    </div>
+
+                        <div>
+                            <label for="expected_members" class="block text-sm font-bold text-ink-900">Expected members</label>
+                            <input id="expected_members" name="expected_members" type="number" min="1" max="1000000" value=""
+                                   class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-ink-900 placeholder:text-slate-400 focus:border-ocean-500 focus:outline-none focus:ring-2 focus:ring-ocean-500/20 "
+                                   placeholder="e.g. 120">
+                                                    </div>
+                    </div>
+
+                    <div>
+                        <label for="plan" class="block text-sm font-bold text-ink-900">Plan of interest</label>
+                        <select id="plan" name="plan"
+                                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-ink-900 focus:border-ocean-500 focus:outline-none focus:ring-2 focus:ring-ocean-500/20 ">
+                            <option value="">Help me choose</option>
+                                                            <option value="platform_managed_free" >
+                                    Platform Managed Free · KES 0.00 / monthly
+                                </option>
+                                                            <option value="common" >
+                                    common · KES 500.00 / monthly
+                                </option>
+                                                            <option value="starter_savings_circle_basic" >
+                                    Starter Savings Circle Basic · KES 1,000.00 / monthly
+                                </option>
+                                                            <option value="starter" >
+                                    Starter · KES 2,500.00 / monthly
+                                </option>
+                                                            <option value="growth" >
+                                    Growth · KES 7,500.00 / monthly
+                                </option>
+                                                            <option value="enterprise" >
+                                    Enterprise · KES 25,000.00 / monthly
+                                </option>
+                                                    </select>
+                                            </div>
+
+                    <div>
+                        <label for="message" class="block text-sm font-bold text-ink-900">What would you like us to know?</label>
+                        <textarea id="message" name="message" rows="5" maxlength="2000"
+                                  class="mt-2 w-full resize-y rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-ink-900 placeholder:text-slate-400 focus:border-ocean-500 focus:outline-none focus:ring-2 focus:ring-ocean-500/20 "
+                                  placeholder="Tell us about your current process, the modules you need or any questions you have."></textarea>
+                                            </div>
+
+                    <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ocean-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-ocean-900/10 transition hover:bg-ocean-700 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:ring-offset-2 sm:w-auto">
+                        Send access request
+                        <svg class="h-5 w-5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+</svg>
+                    </button>
+                </form>
+            </div>
+
+            <div class="space-y-6">
+                <div class="rounded-3xl bg-ink-900 p-7 text-white shadow-lift sm:p-8">
+                    <p class="text-xs font-bold uppercase tracking-[0.2em] text-jade-300">What happens next</p>
+                    <div class="mt-6 space-y-6">
+                                                    <div class="flex gap-4">
+                                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-xs font-bold text-jade-300">01</span>
+                                <div>
+                                    <p class="text-sm font-bold">We review your request</p>
+                                    <p class="mt-1 text-sm leading-6 text-slate-300">We look at your group type, size and the workflows you described.</p>
+                                </div>
+                            </div>
+                                                    <div class="flex gap-4">
+                                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-xs font-bold text-jade-300">02</span>
+                                <div>
+                                    <p class="text-sm font-bold">We recommend a setup</p>
+                                    <p class="mt-1 text-sm leading-6 text-slate-300">You get guidance on the plan, roles, products and payment options that fit.</p>
+                                </div>
+                            </div>
+                                                    <div class="flex gap-4">
+                                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-xs font-bold text-jade-300">03</span>
+                                <div>
+                                    <p class="text-sm font-bold">You invite your members</p>
+                                    <p class="mt-1 text-sm leading-6 text-slate-300">Once the workspace is ready, authorised officials invite members securely.</p>
+                                </div>
+                            </div>
+                                            </div>
+                </div>
+
+                <div class="rounded-3xl border border-ocean-200 bg-ocean-50 p-7">
+                    <svg class="h-5 w-5 h-6 w-6 text-ocean-700" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+</svg>
+                    <h2 class="mt-4 text-base font-bold text-ink-900">Already have an account?</h2>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">Members and officials should sign in instead of submitting a request.</p>
+                    <a href="https://cheruiyotruto.github.io/chamacore/login" class="mt-4 inline-flex items-center gap-2 text-sm font-bold text-ocean-700 hover:text-ocean-800">
+                        Go to sign in
+                        <svg class="h-5 w-5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+</svg>
+                    </a>
+                </div>
+
+                <div class="rounded-3xl border border-jade-200 bg-jade-50 p-7">
+                    <svg class="h-5 w-5 h-6 w-6 text-jade-700" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 3h6m-6-15h6a2.25 2.25 0 012.25 2.25v15.75l-3-1.5-3 1.5-3-1.5-3 1.5V4.5A2.25 2.25 0 019 3z" />
+</svg>
+                    <h2 class="mt-4 text-base font-bold text-ink-900">Want to compare first?</h2>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">See member limits and module bundles before you choose a plan.</p>
+                    <a href="https://cheruiyotruto.github.io/chamacore/pricing" class="mt-4 inline-flex items-center gap-2 text-sm font-bold text-jade-700 hover:text-jade-800">
+                        View pricing
+                        <svg class="h-5 w-5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+</svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+        </main>
+
+        <footer class="mt-24 bg-ink-950 text-slate-300">
+            <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+                <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                        <div class="flex items-center gap-2.5 text-white">
+                            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-ocean-400 to-jade-400 text-sm font-extrabold text-ink-950">C</span>
+                            <span class="text-lg font-bold">Chama Core</span>
+                        </div>
+                        <p class="mt-4 max-w-sm text-sm leading-6 text-slate-400">
+                            One dependable workspace for group savings, lending, payments, records and decisions.
+                        </p>
+                        <div class="mt-5 flex flex-wrap gap-2 text-xs font-medium text-slate-400">
+                            <span class="rounded-full bg-white/5 px-3 py-1 ring-1 ring-white/10">Tenant isolated</span>
+                            <span class="rounded-full bg-white/5 px-3 py-1 ring-1 ring-white/10">Double-entry ledger</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-sm font-bold text-white">Product</p>
+                        <ul class="mt-4 space-y-2.5 text-sm">
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/features" class="hover:text-white">Features</a></li>
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/pricing" class="hover:text-white">Plans &amp; pricing</a></li>
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/features#payments" class="hover:text-white">Payments</a></li>
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/features#reports" class="hover:text-white">Reports</a></li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <p class="text-sm font-bold text-white">Company</p>
+                        <ul class="mt-4 space-y-2.5 text-sm">
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/about" class="hover:text-white">About Chama Core</a></li>
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/about#principles" class="hover:text-white">How we work</a></li>
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/contact" class="hover:text-white">Contact</a></li>
+                            <li><a href="https://cheruiyotruto.github.io/chamacore/login" class="hover:text-white">Existing member sign in</a></li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <p class="text-sm font-bold text-white">Get started</p>
+                        <p class="mt-4 text-sm leading-6 text-slate-400">Tell us about your group and we will help you choose the right setup.</p>
+                        <a href="https://cheruiyotruto.github.io/chamacore/contact" class="mt-4 inline-flex items-center gap-2 rounded-lg bg-jade-500 px-4 py-2 text-sm font-bold text-ink-950 hover:bg-jade-400">
+                            Request access
+                            <svg class="h-5 w-5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+</svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+                    <p>&copy; 2026 Chama Core. Built for responsible group finance.</p>
+                    <p>Savings · Loans · Payments · Governance · Reports</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    </body>
+</html>

@@ -29,13 +29,13 @@
 <body class="min-h-full bg-slate-50 text-slate-900 antialiased">
     <header class="border-b border-slate-800 bg-slate-900 text-white">
         <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 lg:px-8">
-            <div class="flex items-center gap-3">
+            <a href="{{ route('home') }}" class="flex items-center gap-3" aria-label="Go to the public landing page">
                 <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-400 text-sm font-bold text-slate-900">C</span>
                 <div>
                     <p class="text-sm font-semibold">{{ config('app.name') }}</p>
                     <p class="text-xs text-slate-400">Platform administration</p>
                 </div>
-            </div>
+            </a>
 
             <div class="flex items-center gap-4">
                 <span class="hidden text-xs text-slate-400 sm:block">{{ $user?->email }}</span>

@@ -32,10 +32,10 @@
         <aside class="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-brand-900 p-12 text-white lg:flex">
 
             <div class="relative">
-                <div class="flex items-center gap-3">
+                <a href="{{ route('home') }}" class="flex items-center gap-3" aria-label="Go to the public landing page">
                     <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-400 text-lg font-bold text-brand-950">C</span>
                     <span class="text-lg font-semibold tracking-tight">{{ config('app.name') }}</span>
-                </div>
+                </a>
 
                 <h1 class="mt-16 max-w-md text-3xl font-semibold leading-tight">
                     Savings, merry-go-round, table banking and lending — in one ledger.
@@ -68,10 +68,10 @@
 
         <main class="flex w-full flex-col justify-center px-4 py-10 lg:w-1/2 lg:px-16">
             <div class="mx-auto w-full max-w-sm">
-                <div class="mb-8 flex items-center gap-3 lg:hidden">
+                <a href="{{ route('home') }}" class="mb-8 flex items-center gap-3 lg:hidden" aria-label="Go to the public landing page">
                     <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">C</span>
                     <span class="font-semibold text-slate-900">{{ config('app.name') }}</span>
-                </div>
+                </a>
 
                 @if (session('status'))
                     <div class="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">

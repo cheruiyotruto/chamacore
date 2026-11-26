@@ -73,7 +73,7 @@
 <body class="min-h-full bg-slate-50 text-slate-900 antialiased">
     <header class="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
-            <a href="{{ route('portal.dashboard') }}" class="flex min-w-0 items-center gap-3">
+            <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-3" aria-label="Go to the public landing page">
                 <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">C</span>
                 <div class="min-w-0">
                     <p class="truncate text-sm font-semibold text-slate-900">{{ $group?->name }}</p>

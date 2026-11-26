@@ -33,11 +33,13 @@
             class="fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white transition-transform lg:static lg:translate-x-0"
         >
             <div class="flex h-16 items-center gap-3 border-b border-slate-200 px-5">
-                <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">C</span>
-                <div class="min-w-0">
-                    <p class="truncate text-sm font-semibold text-slate-900">{{ $group?->name ?? config('app.name') }}</p>
-                    <p class="text-xs text-slate-500">{{ $membership?->role?->name ?? 'Staff' }}</p>
-                </div>
+                <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-3" aria-label="Go to the public landing page">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">C</span>
+                    <div class="min-w-0">
+                        <p class="truncate text-sm font-semibold text-slate-900">{{ $group?->name ?? config('app.name') }}</p>
+                        <p class="text-xs text-slate-500">{{ $membership?->role?->name ?? 'Staff' }}</p>
+                    </div>
+                </a>
             </div>
 
             <nav class="flex-1 space-y-4 overflow-y-auto px-3 py-5">

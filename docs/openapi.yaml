@@ -1,0 +1,3067 @@
+openapi: 3.1.0
+info:
+  title: Chama Core API
+  version: "1.0.0"
+  description: |
+    Versioned JSON API consumed by the Chama Core Flutter client.
+
+    ## Money
+    Request amounts are decimal KES values (for example `1500.00`). Response
+    amounts are integer **minor units** (cents). The server converts request
+    amounts with `round(value * 100)`.
+
+    ## Tenancy
+    Every endpoint inside the authenticated block requires:
+
+    * `Authorization: Bearer <token>` issued by `POST /auth/login`
+    * `X-Group-Id: <group id>` matching a group ability on the token
+    * `Accept: application/json`
+
+    Server-side `GroupScope` and `MemberScope` enforce isolation of the group
+    and, for ordinary members, the member's own rows. The client must never be
+    trusted to enforce privacy.
+
+    ## Web-only administration
+
+    Bill/bank-transfer configuration, reminder rules, organisation branches,
+    platform management modes, public member sign-up opt-in and application
+    review, platform-wide payment charges and enabled currencies are configured
+    in the server-rendered admin UI and are not REST resources. The public
+    directory (`GET /join`), application form
+    (`GET/POST /join/{group:slug}/apply`), confirmation page
+    (`GET /join/{group:slug}/application-received`) and super-admin review
+    screens (`GET /platform/applications` with approve/reject actions) are HTML
+    pages outside `/api/v1`; they are listed under `x-web-routes` below for
+    reference. Public applications create a pending member that cannot access
+    tenant data until a super admin approves it. The mobile portal uses the same
+    tenant data: merry-go-round contributions can be paid from a wallet or with
+    M-Pesa STK (`purpose: mgr_contribution` on `POST /payments`), and reminder
+    preferences are delivered through the configured notification channels.
+    Platform revenue is a report-only view of income posted by marked
+    organisations plus paid subscription invoices.
+  contact:
+    name: Chama Core
+servers:
+  - url: /api/v1
+    description: Same-host API
+
+tags:
+  - name: Auth
+  - name: Dashboard
+  - name: Savings
+  - name: Loans
+  - name: Wallet
+  - name: Bills
+  - name: Bank transfers
+  - name: Payments
+  - name: Merry-go-round
+  - name: Notifications
+  - name: Documents
+  - name: Support
+
+security:
+  - bearerAuth: []
+
+x-web-routes:
+  description: Server-rendered HTML routes outside the versioned /api/v1 JSON API.
+  routes:
+    - method: GET
+      path: /join
+      name: public.join.index
+      description: Public directory of opted-in groups; also accepts ?invitation=<token or link> to open a personal invitation.
+    - method: GET
+      path: /join/{group:slug}/apply
+      name: public.join.apply
+      description: Public application form for one opted-in group.
+    - method: POST
+      path: /join/{group:slug}/apply
+      name: public.join.store
+      description: Submit an application; always creates a pending member.
+    - method: GET
+      path: /join/{group:slug}/application-received
+      name: public.join.submitted
+      description: Confirmation page after a successful submission.
+    - method: GET
+      path: /platform/applications
+      name: platform.applications.index
+      description: Super-admin review queue for pending applications.
+    - method: POST
+      path: /platform/applications/{member}/approve
+      name: platform.applications.approve
+      description: Approve a pending application; supports override_documents.
+    - method: POST
+      path: /platform/applications/{member}/reject
+      name: platform.applications.reject
+      description: Reject a pending application with a required reason.
+    - method: PUT
+      path: /platform/groups/{group}/public-join
+      name: platform.groups.public-join.update
+      description: Opt a platform-managed group in or out of public sign-up.
+    - method: GET
+      path: /platform/currencies
+      name: platform.currencies.index
+      description: Super-admin catalogue of enabled/disabled currencies.
+    - method: PUT
+      path: /platform/currencies
+      name: platform.currencies.update
+      description: Enable or disable currencies offered in group settings.
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Exchange credentials for a Sanctum bearer token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Authenticated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "422":
+          description: Invalid credentials, inactive account, missing membership or required MFA code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "429":
+          description: Too many login attempts
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Current user, membership and group
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "200":
+          description: Current session context
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user, membership, group, permissions, is_staff]
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+                  membership:
+                    $ref: "#/components/schemas/Membership"
+                  group:
+                    $ref: "#/components/schemas/GroupSummary"
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+                  is_staff:
+                    type: boolean
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /auth/groups:
+    get:
+      tags: [Auth]
+      summary: List the caller's active group memberships
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "200":
+          description: Memberships
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Membership"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke the current bearer token
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "204":
+          description: Token revoked
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/password:
+    post:
+      tags: [Auth]
+      summary: Change the password and revoke other tokens
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_password, password, password_confirmation]
+              properties:
+                current_password:
+                  type: string
+                password:
+                  type: string
+                  format: password
+                password_confirmation:
+                  type: string
+                  format: password
+      responses:
+        "204":
+          description: Password changed
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/devices:
+    post:
+      tags: [Auth]
+      summary: Register a push-device token for the current user
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, platform]
+              properties:
+                token:
+                  type: string
+                  maxLength: 500
+                platform:
+                  type: string
+                  enum: [android, ios, web]
+      responses:
+        "204":
+          description: Device registered
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+    delete:
+      tags: [Auth]
+      summary: Remove a push-device token
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                  maxLength: 500
+      responses:
+        "204":
+          description: Device removed
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Member dashboard summary
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /savings:
+    get:
+      tags: [Savings]
+      summary: List the caller's savings accounts
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "200":
+          description: Savings accounts and totals
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, totals]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/SavingsAccount"
+                  totals:
+                    type: object
+                    required: [balance, available, pledged]
+                    properties:
+                      balance:
+                        type: integer
+                        description: Minor units
+                      available:
+                        type: integer
+                        description: Minor units
+                      pledged:
+                        type: integer
+                        description: Minor units
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /savings/{account}:
+    get:
+      tags: [Savings]
+      summary: Show one savings account with transactions
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - $ref: "#/components/parameters/AccountId"
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+      responses:
+        "200":
+          description: Account and paginated transactions
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [account, transactions]
+                properties:
+                  account:
+                    $ref: "#/components/schemas/SavingsAccount"
+                  transactions:
+                    $ref: "#/components/schemas/SavingsTransactionPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /savings/{account}/deposit:
+    post:
+      tags: [Savings]
+      summary: Initiate an M-Pesa deposit into a savings account
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - $ref: "#/components/parameters/AccountId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, phone]
+              properties:
+                amount:
+                  type: number
+                  format: decimal
+                  minimum: 1
+                  description: Decimal KES
+                phone:
+                  type: string
+                  maxLength: 30
+      responses:
+        "202":
+          description: Payment request accepted for provider confirmation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentAccepted"
+        "422":
+          description: Business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /loans:
+    get:
+      tags: [Loans]
+      summary: List the caller's loans and pending guarantee requests
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "200":
+          description: Loans and guarantee requests
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, guarantee_requests]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/LoanPage"
+                  guarantee_requests:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Guarantor"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [Loans]
+      summary: Submit a loan application
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoanApplication"
+      responses:
+        "201":
+          description: Loan application submitted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, loan]
+                properties:
+                  message:
+                    type: string
+                  loan:
+                    $ref: "#/components/schemas/Loan"
+        "422":
+          description: Business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /loans/products:
+    get:
+      tags: [Loans]
+      summary: List active loan products
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "200":
+          description: Loan products
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/LoanProduct"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /loans/quote:
+    post:
+      tags: [Loans]
+      summary: Quote a loan without submitting an application
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoanApplication"
+      responses:
+        "200":
+          description: Quotation
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [product, quotation, fees, multiplier]
+                properties:
+                  product:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                  quotation:
+                    $ref: "#/components/schemas/LoanQuote"
+                  fees:
+                    type: object
+                    additionalProperties: true
+                  multiplier:
+                    type: object
+                    additionalProperties: true
+        "422":
+          description: Business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /loans/guarantees:
+    get:
+      tags: [Loans]
+      summary: List guarantees requested from the caller
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "200":
+          description: Paginated guarantees
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/GuarantorPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /loans/guarantees/{guarantor}/respond:
+    post:
+      tags: [Loans]
+      summary: Accept or reject a guarantee request
+      description: Accepting records the decision only. When the group requires a signature, use the sign endpoint as a separate step.
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - name: guarantor
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision:
+                  type: string
+                  enum: [accept, reject]
+                note:
+                  type: string
+                  maxLength: 500
+      responses:
+        "200":
+          description: Response recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  signature_required:
+                    type: boolean
+                  sign_url:
+                    type: string
+                    nullable: true
+        "422":
+          description: Business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /loans/guarantees/{guarantor}/sign:
+    post:
+      tags: [Loans]
+      summary: Append an electronic signature to an accepted guarantee
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - name: guarantor
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [signature]
+              properties:
+                signature:
+                  type: string
+                  format: byte
+                  maxLength: 2000000
+                  pattern: '^data:image/png;base64,[A-Za-z0-9+/=\r\n]+$'
+                  description: PNG data URI drawn on the signature pad.
+      responses:
+        "200":
+          description: Signature stored in the group EDMS
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  document_id:
+                    type: integer
+        "422":
+          description: Business rule violation or invalid signature
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /loans/{loan}:
+    get:
+      tags: [Loans]
+      summary: Show a loan with schedule, payments, guarantors and approvals
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - $ref: "#/components/parameters/LoanId"
+      responses:
+        "200":
+          description: Loan detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [loan, payoff_amount, schedule, payments, guarantors, approvals]
+                properties:
+                  loan:
+                    $ref: "#/components/schemas/Loan"
+                  payoff_amount:
+                    type: integer
+                    description: Minor units
+                  schedule:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/LoanScheduleLine"
+                  payments:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/LoanPayment"
+                  guarantors:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Guarantor"
+                  approvals:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/LoanApproval"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /loans/{loan}/schedule:
+    get:
+      tags: [Loans]
+      summary: Show a loan repayment schedule
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - $ref: "#/components/parameters/LoanId"
+      responses:
+        "200":
+          description: Schedule lines
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/LoanScheduleLine"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /loans/{loan}/repay:
+    post:
+      tags: [Loans]
+      summary: Initiate an M-Pesa loan repayment
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - $ref: "#/components/parameters/LoanId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, phone]
+              properties:
+                amount:
+                  type: number
+                  format: decimal
+                  minimum: 1
+                  description: Decimal KES
+                phone:
+                  type: string
+                  maxLength: 30
+      responses:
+        "202":
+          description: Payment request accepted for provider confirmation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentAccepted"
+        "422":
+          description: Loan not open for repayment or business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /wallet:
+    get:
+      tags: [Wallet]
+      summary: Show the caller's wallet and recent transactions
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+      responses:
+        "200":
+          description: Wallet and transactions
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [wallet, transactions]
+                properties:
+                  wallet:
+                    $ref: "#/components/schemas/Wallet"
+                  transactions:
+                    $ref: "#/components/schemas/WalletTransactionPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /wallet/members:
+    get:
+      tags: [Wallet]
+      summary: List group members available as wallet transfer recipients
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "200":
+          description: Transfer recipients
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, member_no, name]
+                      properties:
+                        id:
+                          type: integer
+                        member_no:
+                          type: string
+                        name:
+                          type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /wallet/payments:
+    get:
+      tags: [Wallet]
+      summary: List the latest wallet top-up intents
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "200":
+          description: Recent top-ups
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PaymentIntent"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /wallet/top-up:
+    post:
+      tags: [Wallet]
+      summary: Initiate an M-Pesa wallet top-up
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, phone]
+              properties:
+                amount:
+                  type: number
+                  format: decimal
+                  minimum: 1
+                  description: Decimal KES
+                phone:
+                  type: string
+                  maxLength: 30
+      responses:
+        "202":
+          description: Payment request accepted for provider confirmation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentAccepted"
+        "422":
+          description: Business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /wallet/transfer:
+    post:
+      tags: [Wallet]
+      summary: Transfer wallet funds to another active member
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to_member_id, amount]
+              properties:
+                to_member_id:
+                  type: integer
+                amount:
+                  type: number
+                  format: decimal
+                  minimum: 0.01
+                  description: Decimal KES
+      responses:
+        "200":
+          description: Transfer completed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, transfer]
+                properties:
+                  message:
+                    type: string
+                  transfer:
+                    type: object
+                    required: [amount, reference, transaction_id]
+                    properties:
+                      amount:
+                        type: integer
+                        description: Minor units
+                      reference:
+                        type: string
+                      transaction_id:
+                        type: integer
+        "422":
+          description: Insufficient funds or other business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /bills:
+    get:
+      tags: [Bills]
+      summary: List bills attached to the caller
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Paginated bills
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/BillPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /bills/{bill}:
+    get:
+      tags: [Bills]
+      summary: Show one bill and its payment history
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - name: bill
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Bill detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [bill]
+                properties:
+                  bill:
+                    $ref: "#/components/schemas/BillDetail"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /bills/{bill}/pay:
+    post:
+      tags: [Bills]
+      summary: Pay a bill from a wallet or request an M-Pesa STK push
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - name: bill
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, amount]
+              properties:
+                method:
+                  type: string
+                  enum: [wallet, mpesa]
+                amount:
+                  type: number
+                  format: decimal
+                  minimum: 0.01
+                phone:
+                  type: string
+                  maxLength: 30
+                  description: Required when method is mpesa
+                manual_charge:
+                  type: number
+                  format: decimal
+                  minimum: 0
+                  description: Used when a charge rule is configured as manual
+      responses:
+        "200":
+          description: Wallet payment completed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, payment, bill]
+                properties:
+                  message:
+                    type: string
+                  payment:
+                    $ref: "#/components/schemas/BillPayment"
+                  bill:
+                    $ref: "#/components/schemas/BillDetail"
+        "202":
+          description: M-Pesa payment requested
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentAccepted"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          description: Business rule violation or insufficient wallet balance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+
+  /payouts/access:
+    get:
+      tags: [Bank transfers]
+      summary: Show member access to bank transfers
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "200":
+          description: Group switch and per-member opt-ins
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [members_enabled, members]
+                properties:
+                  members_enabled:
+                    type: boolean
+                  members:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: {type: integer}
+                        name: {type: string}
+                        can_bank_transfer: {type: boolean}
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    put:
+      tags: [Bank transfers]
+      summary: Open or close transfers for members and set individual opt-ins
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                members_enabled: {type: boolean}
+                members:
+                  type: object
+                  additionalProperties: {type: boolean}
+      responses:
+        "200":
+          description: Access updated
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /payouts/destinations:
+    get:
+      tags: [Bank transfers]
+      summary: List configured payment destinations
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "200":
+          description: Destinations
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PaymentDestination"
+    post:
+      tags: [Bank transfers]
+      summary: Add a bank account, PayBill, till or phone destination
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentDestinationInput"
+      responses:
+        "201":
+          description: Destination created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [destination]
+                properties:
+                  destination:
+                    $ref: "#/components/schemas/PaymentDestination"
+
+  /payouts/quote:
+    get:
+      tags: [Bank transfers]
+      summary: Quote the charges for a payout
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - name: destination_id
+          in: query
+          required: true
+          schema: {type: integer}
+        - name: amount
+          in: query
+          required: true
+          schema: {type: number, format: decimal, minimum: 0.01}
+      responses:
+        "200":
+          description: Charge quote
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [quote]
+                properties:
+                  quote:
+                    $ref: "#/components/schemas/PayoutQuote"
+
+  /payouts:
+    get:
+      tags: [Bank transfers]
+      summary: List recent transfers
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "200":
+          description: Transfers
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Payout"
+    post:
+      tags: [Bank transfers]
+      summary: Create and initiate a bank transfer or M-Pesa payout
+      description: |
+        Funds are reserved into the payout clearing ledger account. The transfer
+        only completes after the provider callback confirms it. Members may only
+        use `source: wallet` when both the group switch and their own opt-in are
+        enabled.
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [destination_id, amount]
+              properties:
+                destination_id: {type: integer}
+                amount: {type: number, format: decimal, minimum: 0.01}
+                source:
+                  type: string
+                  enum: [bill_collections, wallet]
+                  default: bill_collections
+                bill_id: {type: integer, nullable: true}
+                member_id: {type: integer, nullable: true}
+                manual_charge: {type: number, format: decimal, minimum: 0, nullable: true}
+                idempotency_key: {type: string, maxLength: 120}
+      responses:
+        "202":
+          description: Transfer submitted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, payout]
+                properties:
+                  message: {type: string}
+                  payout:
+                    $ref: "#/components/schemas/Payout"
+        "422":
+          description: Business rule violation or missing member access
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+
+  /payouts/{payout}:
+    get:
+      tags: [Bank transfers]
+      summary: Show one transfer
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - name: payout
+          in: path
+          required: true
+          schema: {type: integer}
+      responses:
+        "200":
+          description: Transfer detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [payout]
+                properties:
+                  payout:
+                    $ref: "#/components/schemas/Payout"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /payouts/callback/{provider}:
+    post:
+      tags: [Bank transfers]
+      summary: Receive a bank or M-Pesa payout callback
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [bank, mpesa]
+        - name: X-Callback-Secret
+          in: header
+          required: false
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Callback processed or deliberately ignored
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ResultCode, ResultDesc, status]
+                properties:
+                  ResultCode: {type: integer}
+                  ResultDesc: {type: string}
+                  status: {type: string, enum: [succeeded, failed, processing, duplicate, ignored]}
+        "403":
+          description: Callback secret mismatch
+
+  /payments:
+    get:
+      tags: [Payments]
+      summary: List payment intents visible to the caller
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Paginated payment intents
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/PaymentIntentPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Payments]
+      summary: Create a payment intent
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [purpose, amount, phone]
+              properties:
+                purpose:
+                  type: string
+                  enum: [wallet_topup, savings_deposit, loan_repayment, bill_payment, mgr_contribution]
+                amount:
+                  type: number
+                  format: decimal
+                  minimum: 1
+                  description: For mgr_contribution, the contribution plus any late penalty
+                phone:
+                  type: string
+                  maxLength: 30
+                savings_account_id:
+                  type: integer
+                  description: Required for savings_deposit
+                loan_id:
+                  type: integer
+                  description: Required for loan_repayment
+                bill_id:
+                  type: integer
+                  description: Required for bill_payment
+                contribution_id:
+                  type: integer
+                  description: Required for mgr_contribution; must belong to the caller
+                manual_charge:
+                  type: number
+                  format: decimal
+                  minimum: 0
+                  description: Used when a charge rule is configured as manual
+      responses:
+        "202":
+          description: Payment request sent
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, payment]
+                properties:
+                  message:
+                    type: string
+                  payment:
+                    $ref: "#/components/schemas/PaymentIntent"
+        "422":
+          description: Missing account or loan, or business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /payments/{intent}:
+    get:
+      tags: [Payments]
+      summary: Show one payment intent
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - name: intent
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Payment intent
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [payment]
+                properties:
+                  payment:
+                    $ref: "#/components/schemas/PaymentIntent"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /payments/mpesa/callback:
+    post:
+      tags: [Payments]
+      summary: Receive a Daraja STK-push callback
+      security: []
+      description: |
+        Called by Safaricom. When `services.mpesa.callback_secret` is set, the
+        request must carry a matching `X-Callback-Secret` header. Malformed
+        callbacks are acknowledged with `status: ignored` to stop retries.
+        The CheckoutRequestID is retained as the payment's provider reference
+        so retried callbacks are deduplicated; the M-Pesa receipt is stored in
+        the intent payload.
+      parameters:
+        - name: X-Callback-Secret
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Callback processed or deliberately ignored
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ResultCode, ResultDesc, status]
+                properties:
+                  ResultCode:
+                    type: integer
+                  ResultDesc:
+                    type: string
+                  status:
+                    type: string
+        "403":
+          description: Callback secret mismatch
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ResultCode:
+                    type: integer
+                  ResultDesc:
+                    type: string
+
+  /merry-go-round:
+    get:
+      tags: [Merry-go-round]
+      summary: List the caller's merry-go-round participations
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "200":
+          description: Page of participations
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/MerryGoRoundParticipantPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /merry-go-round/{cycle}:
+    get:
+      tags: [Merry-go-round]
+      summary: Show a cycle for the caller's participation
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - name: cycle
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cycle, participant summary and contributions
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cycle, participant, summary, contributions]
+                properties:
+                  cycle:
+                    $ref: "#/components/schemas/MerryGoRoundCycle"
+                  participant:
+                    $ref: "#/components/schemas/MerryGoRoundParticipant"
+                  summary:
+                    type: object
+                    required: [due, paid, penalties]
+                    properties:
+                      due:
+                        type: integer
+                        description: Minor units
+                      paid:
+                        type: integer
+                        description: Minor units
+                      penalties:
+                        type: integer
+                        description: Minor units
+                  contributions:
+                    $ref: "#/components/schemas/MerryGoRoundContributionPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List the caller's notifications
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - name: unread_only
+          in: query
+          schema:
+            type: boolean
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Notifications and unread count
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, unread_count]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/NotificationPage"
+                  unread_count:
+                    type: integer
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /notifications/{id}/read:
+    post:
+      tags: [Notifications]
+      summary: Mark one notification as read
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Marked as read
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /notifications/read-all:
+    post:
+      tags: [Notifications]
+      summary: Mark all notifications as read
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "204":
+          description: All marked as read
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /documents:
+    get:
+      tags: [Documents]
+      summary: List documents shared with the caller
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Paginated documents
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/DocumentPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /documents/{document}/download:
+    get:
+      tags: [Documents]
+      summary: Download a document
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - name: document
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: File stream
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /support:
+    get:
+      tags: [Support]
+      summary: List the caller's support tickets
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      responses:
+        "200":
+          description: Paginated tickets
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/SupportTicketPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Support]
+      summary: Open a support ticket
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, category, priority, message]
+              properties:
+                subject:
+                  type: string
+                  maxLength: 190
+                category:
+                  type: string
+                  enum: [general, loan, savings, wallet, account, technical]
+                priority:
+                  type: string
+                  enum: [low, normal, high, urgent]
+                message:
+                  type: string
+                  maxLength: 5000
+      responses:
+        "201":
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, ticket]
+                properties:
+                  message:
+                    type: string
+                  ticket:
+                    $ref: "#/components/schemas/SupportTicket"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /support/{ticket}:
+    get:
+      tags: [Support]
+      summary: Show a ticket and its public messages
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - $ref: "#/components/parameters/TicketId"
+      responses:
+        "200":
+          description: Ticket and messages
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ticket, messages]
+                properties:
+                  ticket:
+                    $ref: "#/components/schemas/SupportTicket"
+                  messages:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TicketMessage"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /support/{ticket}/reply:
+    post:
+      tags: [Support]
+      summary: Reply to an open ticket
+      parameters:
+        - $ref: "#/components/parameters/GroupHeader"
+        - $ref: "#/components/parameters/TicketId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body:
+                  type: string
+                  maxLength: 5000
+      responses:
+        "201":
+          description: Reply sent
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, reply]
+                properties:
+                  message:
+                    type: string
+                  reply:
+                    type: object
+                    required: [id, body, created_at]
+                    properties:
+                      id:
+                        type: integer
+                      body:
+                        type: string
+                      created_at:
+                        type: string
+                        format: date-time
+        "422":
+          description: Ticket closed or validation failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum
+
+  parameters:
+    GroupHeader:
+      name: X-Group-Id
+      in: header
+      required: true
+      description: Active group id; must match a `group:{id}` token ability.
+      schema:
+        type: integer
+    AccountId:
+      name: account
+      in: path
+      required: true
+      schema:
+        type: integer
+    LoanId:
+      name: loan
+      in: path
+      required: true
+      schema:
+        type: integer
+    TicketId:
+      name: ticket
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid bearer token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Message"
+    Forbidden:
+      description: No access to this resource or group
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Message"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Message"
+    ValidationFailed:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationError"
+
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password, device_name]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        device_name:
+          type: string
+          maxLength: 100
+          description: Human-readable device label; also used as the Sanctum token name.
+        platform:
+          type: string
+          enum: [android, ios, web]
+        group_id:
+          type: integer
+          description: Optional preferred group when the user belongs to several.
+        code:
+          type: string
+          pattern: "^[0-9]{6}$"
+          description: TOTP code when MFA is enabled.
+
+    AuthSession:
+      type: object
+      required: [token_type, token, expires_at, user, active_membership, groups]
+      properties:
+        token_type:
+          type: string
+          const: Bearer
+        token:
+          type: string
+          description: Plain-text Sanctum token; shown only once.
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        user:
+          $ref: "#/components/schemas/User"
+        active_membership:
+          $ref: "#/components/schemas/Membership"
+        groups:
+          type: array
+          items:
+            $ref: "#/components/schemas/Membership"
+
+    User:
+      type: object
+      required: [id, name, email, mfa_enabled, is_super_admin]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          nullable: true
+        mfa_enabled:
+          type: boolean
+        is_super_admin:
+          type: boolean
+
+    Membership:
+      type: object
+      required: [member_id, member_no, name, status, group]
+      properties:
+        member_id:
+          type: integer
+        member_no:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+        group:
+          $ref: "#/components/schemas/GroupSummary"
+        role:
+          oneOf:
+            - $ref: "#/components/schemas/Role"
+            - type: "null"
+
+    GroupSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        currency:
+          type: string
+        timezone:
+          type: string
+
+    Role:
+      type: object
+      required: [key, name, permissions]
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+
+    Dashboard:
+      type: object
+      required: [member, summary, savings_accounts, loans, next_installments, guarantee_requests]
+      properties:
+        member:
+          type: object
+          required: [id, name, member_no]
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            member_no:
+              type: string
+        summary:
+          type: object
+          required:
+            [savings_balance, loan_outstanding, active_loans, wallet_balance, pending_fines, mgr_active_cycles]
+          properties:
+            savings_balance:
+              type: integer
+              description: Minor units
+            loan_outstanding:
+              type: integer
+              description: Minor units
+            active_loans:
+              type: integer
+            wallet_balance:
+              type: integer
+              description: Minor units
+            pending_fines:
+              type: integer
+              description: Minor units
+            mgr_active_cycles:
+              type: integer
+        savings_accounts:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              account_no:
+                type: string
+              product:
+                type: string
+              balance:
+                type: integer
+              available_balance:
+                type: integer
+              pledged_amount:
+                type: integer
+        loans:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              loan_no:
+                type: string
+              status:
+                type: string
+              product:
+                type: string
+              outstanding:
+                type: integer
+              progress_percent:
+                type: integer
+        next_installments:
+          type: array
+          items:
+            type: object
+            properties:
+              loan_id:
+                type: integer
+              loan_no:
+                type: string
+              due_date:
+                type: string
+                format: date
+              amount_due:
+                type: integer
+        guarantee_requests:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              loan_id:
+                type: integer
+              loan_no:
+                type: string
+              amount:
+                type: integer
+              requested_at:
+                type: string
+                format: date-time
+
+    SavingsAccount:
+      type: object
+      required:
+        [id, account_no, balance, available_balance, pledged_amount, status]
+      properties:
+        id:
+          type: integer
+        account_no:
+          type: string
+        product:
+          type: string
+          nullable: true
+        type:
+          type: string
+          nullable: true
+          description: mandatory, voluntary, emergency, shares, welfare or special
+        balance:
+          type: integer
+          description: Minor units
+        available_balance:
+          type: integer
+          description: Minor units
+        pledged_amount:
+          type: integer
+          description: Minor units
+        status:
+          type: string
+        opened_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    SavingsTransaction:
+      type: object
+      required: [id, type, direction, amount, balance_after]
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+          nullable: true
+        type:
+          type: string
+        direction:
+          type: string
+          enum: [debit, credit]
+        amount:
+          type: integer
+          description: Minor units
+        balance_after:
+          type: integer
+          description: Minor units
+        description:
+          type: string
+          nullable: true
+        reference:
+          type: string
+          nullable: true
+
+    SavingsTransactionPage:
+      allOf:
+        - $ref: "#/components/schemas/Paginator"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/SavingsTransaction"
+
+    Loan:
+      type: object
+      required: [id, loan_no, status, requested_amount, outstanding_total]
+      properties:
+        id:
+          type: integer
+        loan_no:
+          type: string
+        status:
+          type: string
+          description: draft, submitted, guarantors_pending, under_review, approved, rejected, disbursed, active, restructured, closed, defaulted or written_off
+        product:
+          type: string
+          nullable: true
+        requested_amount:
+          type: integer
+        approved_amount:
+          type: integer
+          nullable: true
+        principal:
+          type: integer
+          nullable: true
+        total_repayable:
+          type: integer
+          nullable: true
+        outstanding_principal:
+          type: integer
+        outstanding_interest:
+          type: integer
+        outstanding_fees:
+          type: integer
+        outstanding_penalties:
+          type: integer
+        outstanding_total:
+          type: integer
+        amount_paid:
+          type: integer
+        progress_percent:
+          type: integer
+        duration:
+          type: integer
+          nullable: true
+        duration_unit:
+          type: string
+          nullable: true
+        repayment_frequency:
+          type: string
+          nullable: true
+        first_due_date:
+          type: string
+          format: date
+          nullable: true
+        maturity_date:
+          type: string
+          format: date
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    LoanPage:
+      allOf:
+        - $ref: "#/components/schemas/Paginator"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Loan"
+
+    LoanProduct:
+      type: object
+      required: [id, name, code, interest_method, interest_rate_bps]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+        category:
+          type: string
+          description: Built-in type slug, or a group-defined custom type slug.
+        category_label:
+          type: string
+          description: Human-readable type label for display.
+        description:
+          type: string
+          nullable: true
+        interest_method:
+          type: string
+        interest_rate_bps:
+          type: integer
+          description: Basis points per interest period (for example 1200 = 12%).
+        interest_period:
+          type: string
+        repayment_frequency:
+          type: string
+        duration_min:
+          type: integer
+        duration_max:
+          type: integer
+        duration_unit:
+          type: string
+        min_amount:
+          type: integer
+        max_amount:
+          type: integer
+        requires_guarantors:
+          type: boolean
+        min_guarantors:
+          type: integer
+
+    LoanApplication:
+      type: object
+      required: [loan_product_id, amount, duration]
+      properties:
+        loan_product_id:
+          type: integer
+        amount:
+          type: number
+          format: decimal
+          minimum: 1
+          description: Decimal KES
+        duration:
+          type: integer
+          minimum: 1
+        duration_unit:
+          type: string
+          enum: [days, weeks, months]
+          nullable: true
+        purpose:
+          type: string
+          maxLength: 100
+          nullable: true
+        purpose_description:
+          type: string
+          maxLength: 2000
+          nullable: true
+        guarantors:
+          type: array
+          items:
+            type: integer
+          description: Member ids invited as guarantors.
+        non_member_guarantors:
+          type: array
+          maxItems: 10
+          description: People who are not members yet. Each receives a join invitation and funds the guarantee after approval.
+          items:
+            type: object
+            required: []
+            properties:
+              email:
+                type: string
+                format: email
+                nullable: true
+              phone:
+                type: string
+                nullable: true
+              channels:
+                type: array
+                items:
+                  type: string
+                  enum: [email, sms, whatsapp]
+                description: Optional delivery channels. Defaults to email and/or SMS based on the contact supplied.
+
+    LoanQuote:
+      type: object
+      additionalProperties: true
+      description: |
+        Output of the deterministic loan calculator. Always includes
+        `principal`, `total_interest`, `total_fees`, `total_repayable`,
+        `installment_count`, `first_due_date`, `maturity_date`, `term_days`,
+        `rate_per_period`, `effective_annual_rate`, `method` and `lines`.
+        Monetary values are minor units.
+
+    LoanScheduleLine:
+      type: object
+      required: [installment_no, due_date, principal_due, interest_due, total_due, total_paid, outstanding, status]
+      properties:
+        installment_no:
+          type: integer
+        due_date:
+          type: string
+          format: date
+        principal_due:
+          type: integer
+        interest_due:
+          type: integer
+        fee_due:
+          type: integer
+        penalty_due:
+          type: integer
+        total_due:
+          type: integer
+        total_paid:
+          type: integer
+        outstanding:
+          type: integer
+        status:
+          type: string
+
+    LoanPayment:
+      type: object
+      properties:
+        id:
+          type: integer
+        amount:
+          type: integer
+        method:
+          type: string
+        reference:
+          type: string
+          nullable: true
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Guarantor:
+      type: object
+      required: [id, loan_id, amount, status]
+      properties:
+        id:
+          type: integer
+        loan_id:
+          type: integer
+        loan_no:
+          type: string
+          nullable: true
+        borrower:
+          type: string
+          nullable: true
+        amount:
+          type: integer
+        status:
+          type: string
+          enum: [pending, accepted, rejected, released, called, invited, awaiting_savings]
+        invitee_email:
+          type: string
+          format: email
+          nullable: true
+        invitee_phone:
+          type: string
+          nullable: true
+        required_savings_amount:
+          type: integer
+          nullable: true
+          description: Minimum qualifying savings needed before an invited guarantor's request is delivered.
+        invitation_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Join link for a non-member guarantor invitation.
+        requested_at:
+          type: string
+          format: date-time
+          nullable: true
+        funded_at:
+          type: string
+          format: date-time
+          nullable: true
+        responded_at:
+          type: string
+          format: date-time
+          nullable: true
+        response_note:
+          type: string
+          nullable: true
+        portal_url:
+          type: string
+          description: Link to this request in the member portal.
+        signature_url:
+          type: string
+          nullable: true
+          description: Endpoint for submitting the e-signature, available once the guarantee is accepted and not yet signed.
+
+    GuarantorPage:
+      allOf:
+        - $ref: "#/components/schemas/Paginator"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Guarantor"
+
+    LoanApproval:
+      type: object
+      properties:
+        step_index:
+          type: integer
+        role_key:
+          type: string
+        action:
+          type: string
+        comments:
+          type: string
+          nullable: true
+        acted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Wallet:
+      type: object
+      required: [id, balance, available_balance, status]
+      properties:
+        id:
+          type: integer
+        balance:
+          type: integer
+          description: Minor units
+        available_balance:
+          type: integer
+          description: Minor units
+        status:
+          type: string
+
+    WalletTransaction:
+      type: object
+      required: [id, type, direction, amount, balance_after, status]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        direction:
+          type: string
+          enum: [debit, credit]
+        amount:
+          type: integer
+        balance_after:
+          type: integer
+        description:
+          type: string
+          nullable: true
+        reference:
+          type: string
+          nullable: true
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    WalletTransactionPage:
+      allOf:
+        - $ref: "#/components/schemas/Paginator"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/WalletTransaction"
+
+    Bill:
+      type: object
+      required: [id, uuid, bill_no, payee_name, amount, amount_paid, outstanding, currency, status]
+      properties:
+        id:
+          type: integer
+        uuid:
+          type: string
+          format: uuid
+        bill_no:
+          type: string
+        payee_name:
+          type: string
+        payee_account:
+          type: string
+          nullable: true
+        amount:
+          type: integer
+          description: Minor units
+        amount_paid:
+          type: integer
+          description: Minor units
+        outstanding:
+          type: integer
+          description: Minor units
+        currency:
+          type: string
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [pending, partially_paid, paid, overdue, cancelled]
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    BillDetail:
+      allOf:
+        - $ref: "#/components/schemas/Bill"
+        - type: object
+          properties:
+            payments:
+              type: array
+              items:
+                $ref: "#/components/schemas/BillPayment"
+
+    BillPage:
+      allOf:
+        - $ref: "#/components/schemas/Paginator"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Bill"
+
+    BillPayment:
+      type: object
+      required: [id, reference, amount, method]
+      properties:
+        id:
+          type: integer
+        reference:
+          type: string
+        amount:
+          type: integer
+          description: Minor units
+        settlement_amount:
+          type: integer
+          description: Minor units available to pay out to the biller
+        charge_amount:
+          type: integer
+          description: Minor units
+        charge_breakdown:
+          type: array
+          nullable: true
+          items:
+            type: object
+        borne_by:
+          type: string
+          nullable: true
+          enum: [payer, payee, group, null]
+        method:
+          type: string
+          enum: [cash, bank, wallet, mpesa]
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    PaymentDestination:
+      type: object
+      required: [id, name, type, provider, is_active]
+      properties:
+        id: {type: integer}
+        uuid: {type: string, format: uuid}
+        name: {type: string}
+        type: {type: string, enum: [bank, paybill, till, phone]}
+        label: {type: string}
+        provider: {type: string, enum: [bank, mpesa]}
+        is_active: {type: boolean}
+
+    PaymentDestinationInput:
+      type: object
+      required: [name, type]
+      properties:
+        name: {type: string, maxLength: 120}
+        type: {type: string, enum: [bank, paybill, till, phone]}
+        bank_name: {type: string, nullable: true}
+        account_name: {type: string, nullable: true}
+        account_number: {type: string, nullable: true}
+        paybill_number: {type: string, nullable: true}
+        till_number: {type: string, nullable: true}
+        phone: {type: string, nullable: true}
+
+    PayoutQuote:
+      type: object
+      properties:
+        lines:
+          type: array
+          items:
+            type: object
+        payer_fee: {type: integer}
+        payee_fee: {type: integer}
+        group_fee: {type: integer}
+        total_fee: {type: integer}
+        base_amount: {type: integer}
+        reserved_from_source: {type: integer}
+        net_to_recipient: {type: integer}
+
+    Payout:
+      type: object
+      required: [id, uuid, amount, net_amount, charge_amount, provider, status]
+      properties:
+        id: {type: integer}
+        uuid: {type: string, format: uuid}
+        destination:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/PaymentDestination"
+        source: {type: string, enum: [bill_collections, wallet]}
+        bill_id: {type: integer, nullable: true}
+        amount: {type: integer, description: Minor units}
+        net_amount: {type: integer, description: Minor units sent to the recipient}
+        charge_amount: {type: integer}
+        total_amount: {type: integer, description: Minor units debited from the source}
+        charge_breakdown: {type: array, nullable: true, items: {type: object}}
+        provider: {type: string, enum: [bank, mpesa]}
+        status: {type: string, enum: [pending, processing, succeeded, failed, cancelled]}
+        provider_reference: {type: string, nullable: true}
+        failure_reason: {type: string, nullable: true}
+        created_at: {type: string, format: date-time, nullable: true}
+        paid_at: {type: string, format: date-time, nullable: true}
+
+    PaymentIntent:
+      type: object
+      required: [uuid, purpose, amount, status]
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        purpose:
+          type: string
+          enum: [wallet_topup, savings_deposit, loan_repayment, bill_payment]
+        amount:
+          type: integer
+          description: Total minor units charged to the payer, including fees
+        base_amount:
+          type: integer
+          description: Payment amount before fees
+        charge_amount:
+          type: integer
+          description: Total charge in minor units
+        total_amount:
+          type: integer
+          description: Alias of amount
+        bill_id:
+          type: integer
+          nullable: true
+        provider:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        status:
+          type: string
+        provider_reference:
+          type: string
+          nullable: true
+        failure_reason:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    PaymentIntentPage:
+      allOf:
+        - $ref: "#/components/schemas/Paginator"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/PaymentIntent"
+
+    PaymentAccepted:
+      type: object
+      required: [message, payment]
+      properties:
+        message:
+          type: string
+        payment:
+          type: object
+          required: [uuid, status, amount]
+          properties:
+            uuid:
+              type: string
+              format: uuid
+            status:
+              type: string
+            amount:
+              type: integer
+              description: Minor units
+            provider_reference:
+              type: string
+              nullable: true
+
+    MerryGoRoundParticipant:
+      type: object
+      properties:
+        id:
+          type: integer
+        cycle_id:
+          type: integer
+        cycle:
+          type: string
+          nullable: true
+        frequency:
+          type: string
+          nullable: true
+        contribution_amount:
+          type: integer
+          nullable: true
+        position:
+          type: integer
+        payout_date:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+        total_contributed:
+          type: integer
+        total_received:
+          type: integer
+        payout_status:
+          type: string
+          nullable: true
+        payout_amount:
+          type: integer
+          nullable: true
+        payout:
+          type: object
+          nullable: true
+          properties:
+            amount:
+              type: integer
+            scheduled_date:
+              type: string
+              format: date
+              nullable: true
+            paid_at:
+              type: string
+              format: date-time
+              nullable: true
+            status:
+              type: string
+
+    MerryGoRoundParticipantPage:
+      allOf:
+        - $ref: "#/components/schemas/Paginator"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/MerryGoRoundParticipant"
+
+    MerryGoRoundCycle:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        contribution_amount:
+          type: integer
+        frequency:
+          type: string
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+
+    MerryGoRoundContribution:
+      type: object
+      properties:
+        id:
+          type: integer
+        amount:
+          type: integer
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+        penalty_amount:
+          type: integer
+        reference:
+          type: string
+          nullable: true
+
+    MerryGoRoundContributionPage:
+      allOf:
+        - $ref: "#/components/schemas/Paginator"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/MerryGoRoundContribution"
+
+    Notification:
+      type: object
+      required: [id, type, data]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+        read_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    NotificationPage:
+      allOf:
+        - $ref: "#/components/schemas/Paginator"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Notification"
+
+    Document:
+      type: object
+      required: [id, uuid, type, title, mime_type, size, status, visibility]
+      properties:
+        id:
+          type: integer
+        uuid:
+          type: string
+          format: uuid
+        type:
+          type: string
+        title:
+          type: string
+        mime_type:
+          type: string
+        size:
+          type: integer
+          description: Bytes
+        status:
+          type: string
+        visibility:
+          type: string
+        verified_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    DocumentPage:
+      allOf:
+        - $ref: "#/components/schemas/Paginator"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Document"
+
+    SupportTicket:
+      type: object
+      required: [id, uuid, subject, category, priority, status]
+      properties:
+        id:
+          type: integer
+        uuid:
+          type: string
+          format: uuid
+        subject:
+          type: string
+        category:
+          type: string
+        priority:
+          type: string
+        status:
+          type: string
+        last_reply_at:
+          type: string
+          format: date-time
+          nullable: true
+        closed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    SupportTicketPage:
+      allOf:
+        - $ref: "#/components/schemas/Paginator"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/SupportTicket"
+
+    TicketMessage:
+      type: object
+      required: [id, body]
+      properties:
+        id:
+          type: integer
+        body:
+          type: string
+        sender:
+          type: string
+          nullable: true
+        is_staff:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Paginator:
+      type: object
+      required: [current_page, data, per_page, total]
+      properties:
+        current_page:
+          type: integer
+        data:
+          type: array
+          items: {}
+        first_page_url:
+          type: string
+          nullable: true
+        from:
+          type: integer
+          nullable: true
+        last_page:
+          type: integer
+        last_page_url:
+          type: string
+          nullable: true
+        links:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+                nullable: true
+              label:
+                type: string
+              active:
+                type: boolean
+        next_page_url:
+          type: string
+          nullable: true
+        path:
+          type: string
+        per_page:
+          type: integer
+        prev_page_url:
+          type: string
+          nullable: true
+        to:
+          type: integer
+          nullable: true
+        total:
+          type: integer
+
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+
+    ValidationError:
+      type: object
+      required: [message, errors]
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string

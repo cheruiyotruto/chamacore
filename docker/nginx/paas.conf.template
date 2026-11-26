@@ -1,0 +1,72 @@
+server {
+    listen ${PORT};
+    server_name _;
+
+    root /var/www/html/public;
+    index index.php;
+
+    charset utf-8;
+    client_max_body_size 24m;
+
+    server_tokens off;
+
+    # Dynamic responses get their security headers from Laravel's
+    # SecurityHeaders middleware. The headers below apply only to files nginx
+    # serves directly, so headers are never duplicated.
+
+    access_log /dev/stdout;
+    error_log  /dev/stderr warn;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico {
+        access_log off;
+        log_not_found off;
+        try_files $uri =404;
+    }
+
+    location = /robots.txt {
+        access_log off;
+        log_not_found off;
+        try_files $uri =404;
+    }
+
+    # Public uploads live in the shared storage volume.
+    location /storage/ {
+        alias /var/www/html/storage/app/public/;
+        try_files $uri =404;
+        access_log off;
+        expires 7d;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        fastcgi_read_timeout 120s;
+        fastcgi_buffers 16 16k;
+        fastcgi_buffer_size 32k;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+
+    location ~* \.(?:css|js|mjs|jpg|jpeg|png|gif|ico|svg|webp|woff2?|ttf|eot)$ {
+        expires 7d;
+        access_log off;
+        try_files $uri =404;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+}

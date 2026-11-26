@@ -1,0 +1,81 @@
+# Fly.io — Chama Core
+# The Dockerfile's final `paas` stage runs PHP-FPM + nginx on $PORT.
+# Change `app` to a globally unique name before running `fly launch`.
+
+app = "chama-core"
+# primary_region = "nbo"   # set with `fly launch --region ...`
+
+[build]
+  dockerfile = "Dockerfile"
+
+# Runs once per deploy before machines start. The PaaS entrypoint passes any
+# non-"web" command straight through to php artisan.
+[deploy]
+  release_command = "php artisan migrate --force --no-interaction && php artisan db:seed --force --no-interaction && php artisan optimize"
+
+[env]
+  APP_NAME = "Chama Core"
+  APP_ENV = "production"
+  APP_DEBUG = "false"
+  APP_TIMEZONE = "Africa/Nairobi"
+  LOG_CHANNEL = "stderr"
+  LOG_LEVEL = "info"
+
+  # Set DB_URL to the Fly Postgres connection string with:
+  #   fly secrets set DB_URL='postgres://user:pass@host:5432/db?sslmode=require'
+  DB_CONNECTION = "pgsql"
+  DB_SSLMODE = "require"
+
+  SESSION_DRIVER = "database"
+  SESSION_SECURE_COOKIE = "true"
+  CACHE_STORE = "database"
+  QUEUE_CONNECTION = "database"
+  FILESYSTEM_DISK = "local"
+  TRUSTED_PROXIES = "*"
+  CHAMA_SEED_DEMO = "false"
+  PORT = "8080"
+
+# The image CMD is "web"; the other processes override it and are executed by
+# docker/paas-entrypoint.sh without starting nginx/FPM.
+[processes]
+  app = "web"
+  worker = "php artisan queue:work --tries=3 --timeout=120 --sleep=3 --max-time=3600"
+  scheduler = "php artisan schedule:work --verbose"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+[checks]
+  [checks.status]
+    port = 8080
+    type = "http"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "20s"
+    method = "get"
+    path = "/up"
+
+# Uploaded files are ephemeral on Fly unless you attach a volume or switch to
+# S3-compatible storage (FILESYSTEM_DISK=s3). See docs/PAAS_DEPLOYMENT.md.
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1
+  processes = ["app"]
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+  processes = ["worker", "scheduler"]

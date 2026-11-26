@@ -1,0 +1,209 @@
+# Render Blueprint — Chama Core
+# Deploy: Dashboard > New > Blueprint > point at your repo.
+# Docs: docs/PAAS_DEPLOYMENT.md
+#
+# The Dockerfile's final `paas` stage runs PHP-FPM + nginx in one container.
+# Render builds that stage because it does not support --target.
+
+previews:
+  generation: 'off'
+
+databases:
+  - name: chama-core-db
+    plan: 0.5c-1g
+    databaseName: chama_core
+    user: chama
+    region: oregon
+    storageAutoscalingEnabled: true
+
+services:
+  # ---------------------------------------------------------------- web ---
+  - type: web
+    name: chama-core-web
+    runtime: docker
+    plan: 1c-2g
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /up
+    maxShutdownDelaySeconds: 60
+    disk:
+      name: chama-storage
+      mountPath: /var/www/html/storage
+      sizeGB: 5
+    envVars:
+      - key: APP_NAME
+        value: Chama Core
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: 'false'
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        sync: false # https://your-app.onrender.com
+      - key: APP_TIMEZONE
+        value: Africa/Nairobi
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: info
+
+      # Laravel reads DB_URL in this app (config/database.php), not DATABASE_URL.
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: chama-core-db
+          property: connectionString
+      - key: DB_SSLMODE
+        value: require
+
+      # Database-backed drivers avoid a second managed service. Switch to Redis
+      # later by adding a `keyvalue` service and setting REDIS_* + the drivers.
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_SECURE_COOKIE
+        value: 'true'
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: FILESYSTEM_DISK
+        value: local
+      - key: TRUSTED_PROXIES
+        value: '*'
+
+      - key: SANCTUM_STATEFUL_DOMAINS
+        sync: false # your-app.onrender.com
+      - key: CHAMA_SEED_DEMO
+        value: 'false'
+      - key: PLATFORM_ADMIN_EMAIL
+        sync: false
+      - key: PLATFORM_ADMIN_PASSWORD
+        sync: false
+
+      # Webhook authentication is mandatory in production. Use a different long
+      # random value for each; see docs/PAAS_DEPLOYMENT.md.
+      - key: MPESA_CALLBACK_SECRET
+        sync: false
+      - key: MPESA_B2B_CALLBACK_SECRET
+        sync: false
+      - key: BANK_PAYOUT_CALLBACK_SECRET
+        sync: false
+      - key: SMS_DRIVER
+        value: http
+      - key: WHATSAPP_DRIVER
+        value: http
+
+      # Handled by docker/paas-entrypoint.sh before nginx starts.
+      - key: RUN_MIGRATIONS
+        value: 'true'
+      - key: RUN_SEED
+        value: 'true'
+      - key: RUN_OPTIMIZE
+        value: 'true'
+
+  # -------------------------------------------------------------- queue ---
+  - type: worker
+    name: chama-core-queue
+    runtime: docker
+    plan: 0.5c-512mb
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: php artisan queue:work --tries=3 --timeout=120 --sleep=3 --max-time=3600
+    envVars:
+      - key: APP_NAME
+        value: Chama Core
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: 'false'
+      - key: APP_KEY
+        fromService:
+          type: web
+          name: chama-core-web
+          envVarKey: APP_KEY
+      # Queued jobs generate account/invite/confirmation links, so workers need
+      # the real public URL rather than Laravel's http://localhost default.
+      - key: APP_URL
+        fromService:
+          type: web
+          name: chama-core-web
+          envVarKey: APP_URL
+      - key: APP_TIMEZONE
+        value: Africa/Nairobi
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: info
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: chama-core-db
+          property: connectionString
+      - key: DB_SSLMODE
+        value: require
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: FILESYSTEM_DISK
+        value: local
+      - key: CHAMA_SEED_DEMO
+        value: 'false'
+
+  # ----------------------------------------------------------- scheduler ---
+  - type: worker
+    name: chama-core-scheduler
+    runtime: docker
+    plan: 0.5c-512mb
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: php artisan schedule:work --verbose
+    envVars:
+      - key: APP_NAME
+        value: Chama Core
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: 'false'
+      - key: APP_KEY
+        fromService:
+          type: web
+          name: chama-core-web
+          envVarKey: APP_KEY
+      - key: APP_URL
+        fromService:
+          type: web
+          name: chama-core-web
+          envVarKey: APP_URL
+      - key: APP_TIMEZONE
+        value: Africa/Nairobi
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: info
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: chama-core-db
+          property: connectionString
+      - key: DB_SSLMODE
+        value: require
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: FILESYSTEM_DISK
+        value: local
+      - key: CHAMA_SEED_DEMO
+        value: 'false'
